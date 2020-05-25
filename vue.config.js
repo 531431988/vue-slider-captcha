@@ -42,6 +42,7 @@ module.exports = {
     }
   },
   configureWebpack: config => {
+    config.resolve.extensions = ['.vue', '.js', '.jsx', '.json', '.less', '.css', '.scss', '.jpg', '.png', '.svg']
     if (env) {
       config.externals = assetsCDN.externals
     }
@@ -50,7 +51,9 @@ module.exports = {
     // extract: false,
     loaderOptions: {
       less: {
-        javascriptEnabled: true
+        lessOptions: {
+          javascriptEnabled: true
+        }
       }
     }
   },
@@ -58,7 +61,7 @@ module.exports = {
   pluginOptions: {
     'style-resources-loader': {
       preProcessor: 'less',
-      patterns: [resolve('./demo/less/theme.less')]
+      patterns: [resolve('./demo/var.less')]
     }
   },
   publicPath: process.env.VUE_APP_PUBLIC_PATH,

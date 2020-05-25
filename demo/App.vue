@@ -1,28 +1,45 @@
 <template>
   <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+    <div class="demo">
+      <drag-verify
+        ref="dragVerify"
+        :isPassing.sync="isPassing"
+        text="请按住滑块拖动"
+        successText="验证通过"
+        handlerIcon="el-icon-d-arrow-right"
+        successIcon="el-icon-circle-check"
+      ></drag-verify>
+      <a-button @click="reset">还原</a-button>
+    </div>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
 
 export default {
-  name: 'App',
-  components: {
-    HelloWorld
+  data () {
+    return {
+      isPassing: false
+    }
+  },
+  methods: {
+    reset () {
+      this.isPassing = false
+      this.$refs.dragVerify.reset()
+    }
   }
 }
 </script>
 
-<style>
+<style lang="less">
+body {
+  margin: 0;
+}
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+  height: 100vh;
+  background: #000;
+  .demo {
+    user-select: none;
+  }
 }
 </style>
