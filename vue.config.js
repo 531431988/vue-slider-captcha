@@ -1,6 +1,5 @@
 
 const path = require('path')
-const webpack = require('webpack')
 const env = process.env.NODE_ENV === 'production'
 const resolve = dir => path.join(__dirname, dir)
 const assetsCDN = {
@@ -31,6 +30,22 @@ module.exports = {
     }
   },
   chainWebpack: config => {
+    const svgRule = config.module.rule('svg')
+    svgRule.uses.clear()
+    svgRule
+      .use('babel-loader')
+      .loader('babel-loader')
+      .end()
+      .use('vue-svg-loader')
+      .loader('vue-svg-loader').options({
+        svgo: {
+          plugins: [
+            { cleanupIDs: false },
+            { convertShapeToPath: false },
+            { convertStyleToAttrs: false }
+          ]
+        }
+      })
     // 添加别名
     config.resolve.alias.set('@', resolve('demo'))
       .set('@ant-design/icons/lib/dist$', resolve('./icons.js'))

@@ -1,32 +1,40 @@
 <template>
   <div id="app">
-    <div class="demo">
-      <drag-verify
-        ref="dragVerify"
-        :isPassing.sync="isPassing"
-        text="请按住滑块拖动"
-        successText="验证通过"
-        handlerIcon="el-icon-d-arrow-right"
-        successIcon="el-icon-circle-check"
-      ></drag-verify>
-      <a-button @click="reset">还原</a-button>
-    </div>
+    <a-row type="flex" align="middle" justify="center">
+      <a-col>
+        <VueSliderCaptcha
+          ref="dragVerify"
+          src="https://yimijianfang.github.io/vue-drag-verify/static/img/t3.f6f8c53.png"
+          :value.sync="value"
+          color="#1890ff"
+          successText="验证通过"
+          @refresh="onRefresh"
+          @passcallback="onPassCallBack"
+        ></VueSliderCaptcha>
+        <a-button type="primary" @click="reset" v-if="value">重置</a-button>
+      </a-col>
+    </a-row>
   </div>
 </template>
 
 <script>
-
+import VueSliderCaptcha from '../packages/index'
 export default {
+  components: {
+    VueSliderCaptcha
+  },
   data () {
     return {
-      isPassing: false
+      value: false
     }
   },
   methods: {
     reset () {
-      this.isPassing = false
+      this.value = false
       this.$refs.dragVerify.reset()
-    }
+    },
+    onRefresh () { },
+    onPassCallBack () { }
   }
 }
 </script>
@@ -38,8 +46,6 @@ body {
 #app {
   height: 100vh;
   background: #000;
-  .demo {
-    user-select: none;
-  }
+  user-select: none;
 }
 </style>
