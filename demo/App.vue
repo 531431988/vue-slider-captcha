@@ -5,8 +5,7 @@
         <VueSliderCaptcha
           ref="sliderCaptcha"
           v-model="status"
-          width="400px"
-          height="200px"
+          width="100%"
           :src="src"
           :sliderSrc="sliderSrc"
           :y="y"

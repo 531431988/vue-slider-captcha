@@ -1,6 +1,6 @@
 <template>
   <div class="vue-slider-captcha">
-    <Loading :spinning="!src" tip="加载中" :color="color">
+    <Loading :spinning="!src" :style="loadingStyle" tip="加载中" :color="color">
       <div class="vue-slider-captcha-panel" :style="captchaStyle">
         <template v-if="src">
           <img id="img" :src="`data:image/png;base64,${src}`" :style="captchaStyle" alt />
@@ -97,18 +97,26 @@ export default {
     return {
       isMoving: false,
       x: 0,
+      w: 0,
       scale: 1
     }
   },
   created () {
-    const width = document.body.offsetWidth
-    this.scale = width <= 400 ? 1 - (400 - width) / 400 : 1
+    this.w = document.body.offsetWidth
+    this.scale = this.w <= 400 ? 1 - (400 - this.w) / 400 : 1
   },
   computed: {
     captchaStyle () {
       return {
         width: typeof this.width === 'string' ? this.width : `${this.width}px`,
         height: typeof this.height === 'string' ? this.height : `${this.height}px`
+      }
+    },
+    loadingStyle () {
+      return {
+        width: this.w <= 400 ? `${this.w}px` : '100%',
+        height: `${200 * this.scale}px`,
+        background: '#eee'
       }
     },
     imgSliderStyle () {
@@ -144,9 +152,8 @@ export default {
     },
     onDragFinish (e) {
       if (this.isMoving && !this.value) {
-        const width = document.body.offsetWidth
         var x = (e.pageX || e.changedTouches[0].pageX) - this.x
-        this.$emit('on-finish', width <= 400 ? x / this.scale : x)
+        this.$emit('on-finish', this.w <= 400 ? x / this.scale : x)
         this.isMoving = false
       }
     },

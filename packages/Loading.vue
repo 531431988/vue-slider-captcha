@@ -1,10 +1,7 @@
 <template>
   <div :class="{'ant-loading-nested-loading': spinning}">
     <div>
-      <div
-        v-if="spinning || !$slots.default"
-        class="ant-loading ant-loading-lg ant-loading-spinning"
-      >
+      <div v-if="spinning" class="ant-loading ant-loading-spinning">
         <span class="ant-loading-dot ant-loading-dot-spin">
           <i
             class="ant-loading-dot-item"
@@ -15,8 +12,8 @@
         </span>
         <p class="ant-loading-text" :style="`color:${color}`">{{tip}}</p>
       </div>
+      <slot v-if="$slots.default"></slot>
     </div>
-    <slot v-if="$slots.default"></slot>
   </div>
 </template>
 
