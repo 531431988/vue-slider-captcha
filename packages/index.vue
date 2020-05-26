@@ -1,14 +1,16 @@
 <template>
   <div class="vue-slider-captcha">
-    <div class="vue-slider-captcha-panel">
-      <template v-if="src">
-        <img id="img" :src="`data:image/png;base64,${src}`" :style="captchaStyle" alt />
-        <div class="img-slider" ref="imgSlider" :style="imgSliderStyle">
-          <img :src="`data:image/png;base64,${sliderSrc}`" :style="imgStyle" />
-        </div>
-      </template>
-      <RefreshIcon class="refresh" v-if="!this.value" @click="$emit('on-refresh')" />
-    </div>
+    <Loading :spinning="!src" tip="加载中" :color="color">
+      <div class="vue-slider-captcha-panel" :style="captchaStyle">
+        <template v-if="src">
+          <img id="img" :src="`data:image/png;base64,${src}`" :style="captchaStyle" alt />
+          <div class="img-slider" ref="imgSlider" :style="imgSliderStyle">
+            <img :src="`data:image/png;base64,${sliderSrc}`" :style="imgStyle" />
+          </div>
+          <RefreshIcon class="refresh" v-if="!this.value" @click="$emit('on-refresh')" />
+        </template>
+      </div>
+    </Loading>
     <div
       class="vue-slider-captcha-control"
       @mousemove="onDragMoving"
@@ -49,6 +51,7 @@
 <script>
 import SliderIcon from './slider-icon'
 import RefreshIcon from './refresh-icon'
+import Loading from './Loading'
 
 export default {
   name: 'WMDragCaptcha',
@@ -71,7 +74,7 @@ export default {
     },
     color: {
       type: String,
-      default: '#76c61d'
+      default: '#1890ff'
     },
     width: [String, Number],
     height: [String, Number],
@@ -87,7 +90,8 @@ export default {
   // },
   components: {
     SliderIcon,
-    RefreshIcon
+    RefreshIcon,
+    Loading
   },
   data () {
     return {
@@ -114,7 +118,6 @@ export default {
       }
     },
     imgStyle () {
-      const width = document.body.offsetWidth
       return {
         transform: `translateY(${this.y}px)`
       }
@@ -165,6 +168,7 @@ export default {
   &-panel {
     position: relative;
     overflow: hidden;
+    background: #eee;
     .img-slider {
       position: absolute;
       z-index: 100;

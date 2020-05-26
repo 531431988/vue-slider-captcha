@@ -5,8 +5,8 @@
         <VueSliderCaptcha
           ref="sliderCaptcha"
           v-model="status"
-          color="#1890ff"
-          width="100%"
+          width="400px"
+          height="200px"
           :src="src"
           :sliderSrc="sliderSrc"
           :y="y"
