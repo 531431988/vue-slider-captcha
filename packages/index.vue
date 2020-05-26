@@ -1,23 +1,15 @@
 <template>
   <div class="vue-slider-captcha">
     <div class="vue-slider-captcha-panel">
-      <img
-        v-if="data"
-        ref="checkImg"
-        :src="`data:image/png;base64,${data.bigImage}`"
-        style="width:100%"
-        alt
-      />
-      <div v-if="data" class="img-slider" ref="imgSlider">
-        <img
-          :src="`data:image/png;base64,${data.smallImage}`"
-          :style="`transform:translateY(${data.yHeight}px)`"
-        />
-      </div>
+      <template v-if="src">
+        <img id="img" :src="`data:image/png;base64,${src}`" :style="captchaStyle" alt />
+        <div class="img-slider" ref="imgSlider" :style="imgSliderStyle">
+          <img :src="`data:image/png;base64,${sliderSrc}`" :style="imgStyle" />
+        </div>
+      </template>
       <RefreshIcon class="refresh" v-if="!this.value" @click="$emit('on-refresh')" />
     </div>
     <div
-      ref="control"
       class="vue-slider-captcha-control"
       @mousemove="onDragMoving"
       @mouseup="onDragFinish"
@@ -29,12 +21,8 @@
         class="vue-slider-captcha-progress-bar"
         ref="progressBar"
         :style="`background: ${color}`"
-      >{{value ? successText : ''}}</div>
-      <div
-        class="vue-slider-captcha-tip"
-        :style="{color: isMoving && '#fff'}"
-        ref="message"
-      >{{value ? '' : text}}</div>
+      >{{value ? successTip : ''}}</div>
+      <div class="vue-slider-captcha-tip" :style="{color: isMoving && '#fff'}">{{value ? '' : tip}}</div>
 
       <div
         ref="slider"
@@ -69,32 +57,34 @@ export default {
       type: Boolean,
       default: false
     },
-    text: {
+    tip: {
       type: String,
       default: '向右拖动滑块填充拼图'
     },
-    successText: {
+    successTip: {
       type: String,
       default: '验证通过'
+    },
+    failTip: {
+      type: String,
+      default: '拖动滑块将悬浮图像正确合并'
     },
     color: {
       type: String,
       default: '#76c61d'
     },
-    data: {
-      type: Object
-    },
-    failTip: {
-      type: String,
-      default: '拖动滑块将悬浮图像正确合并'
-    }
+    width: [String, Number],
+    height: [String, Number],
+    src: String,
+    sliderSrc: String,
+    y: Number
   },
-  model: {
-    // event:什么时候触发v-model行为
-    evnet: 'change',
-    // 定义传递给v-model的那个变量，绑定到哪个属性值上
-    prop: 'value'
-  },
+  // model: {
+  //   // event:什么时候触发v-model行为
+  //   evnet: 'change',
+  //   // 定义传递给v-model的那个变量，绑定到哪个属性值上
+  //   prop: 'value'
+  // },
   components: {
     SliderIcon,
     RefreshIcon
@@ -102,7 +92,32 @@ export default {
   data () {
     return {
       isMoving: false,
-      x: 0
+      x: 0,
+      scale: 1
+    }
+  },
+  created () {
+    const width = document.body.offsetWidth
+    this.scale = width <= 400 ? 1 - (400 - width) / 400 : 1
+  },
+  computed: {
+    captchaStyle () {
+      return {
+        width: typeof this.width === 'string' ? this.width : `${this.width}px`,
+        height: typeof this.height === 'string' ? this.height : `${this.height}px`
+      }
+    },
+    imgSliderStyle () {
+      return {
+        height: typeof this.height === 'string' ? this.height : `${this.height}px`,
+        transform: `scale(${this.scale})`
+      }
+    },
+    imgStyle () {
+      const width = document.body.offsetWidth
+      return {
+        transform: `translateY(${this.y}px)`
+      }
     }
   },
   methods: {
@@ -126,15 +141,16 @@ export default {
     },
     onDragFinish (e) {
       if (this.isMoving && !this.value) {
+        const width = document.body.offsetWidth
         var x = (e.pageX || e.changedTouches[0].pageX) - this.x
-        this.$emit('on-finish', x)
+        this.$emit('on-finish', width <= 400 ? x / this.scale : x)
         this.isMoving = false
       }
     },
     onReset () {
       // 将vlaue更新到父级
       // this.$emit('update:value', false)
-      this.$emit('change', false)
+      this.$emit('input', false)
       const { slider, imgSlider, progressBar } = this.$refs
       slider.style.left = '0'
       imgSlider.style.left = '0'
@@ -146,7 +162,6 @@ export default {
 <style lang="less" scoped>
 @color: #666;
 .vue-slider-captcha {
-  width: 400px;
   &-panel {
     position: relative;
     overflow: hidden;
@@ -155,10 +170,11 @@ export default {
       z-index: 100;
       top: 0;
       width: 55px;
-      height: 200px;
-      position: absolute;
-      background-repeat: no-repeat;
-      background-color: transparent;
+      img {
+        position: absolute;
+        top: 0;
+        filter: drop-shadow(1px 1px 1px black);
+      }
     }
     .refresh {
       position: absolute;

@@ -4,14 +4,16 @@
       <a-col>
         <VueSliderCaptcha
           ref="sliderCaptcha"
-          :data="data"
-          v-model="value"
+          v-model="status"
           color="#1890ff"
-          successText="验证通过"
+          width="100%"
+          :src="src"
+          :sliderSrc="sliderSrc"
+          :y="y"
           @on-refresh="onRefresh"
           @on-finish="onFinish"
         ></VueSliderCaptcha>
-        <a-button type="primary" @click="$refs.sliderCaptcha.onReset()" v-if="value">重置</a-button>
+        <a-button type="primary" @click="onReset" v-if="status">重置</a-button>
       </a-col>
     </a-row>
   </div>
@@ -26,8 +28,10 @@ export default {
   },
   data () {
     return {
-      value: false,
-      data: null
+      status: false,
+      src: '',
+      sliderSrc: '',
+      y: 0
     }
   },
   created () {
@@ -35,24 +39,34 @@ export default {
   },
   methods: {
     async onGetImageVerifyCode () {
-      const { code, data, msg } = await getImageVerifyCode({ username: 42 })
+      const {
+        code, data: {
+          bigImage,
+          smallImage,
+          yHeight,
+          reqId
+        }, msg
+      } = await getImageVerifyCode()
       if (code === 200) {
-        this.data = data
+        this.src = bigImage
+        this.sliderSrc = smallImage
+        this.y = yHeight
+        this.reqId = reqId
       } else {
         this.$message.error(msg)
       }
     },
     onFinish (x) {
       verifyImageCode({
-        username: '42',
+        reqId: this.reqId,
         moveLength: x,
-        yHeight: this.data.yHeight
+        yHeight: this.y
       }).then(res => {
         const { code, msg } = res
         if (code === 200) {
-          this.value = true
+          this.status = true
         } else {
-          this.value = false
+          this.status = false
           this.onGetImageVerifyCode()
           this.$refs.sliderCaptcha.onReset()
           this.$message.error(msg)
@@ -61,6 +75,10 @@ export default {
     },
     onRefresh () {
       this.onGetImageVerifyCode()
+    },
+    onReset () {
+      this.onGetImageVerifyCode()
+      this.$refs.sliderCaptcha.onReset()
     }
   }
 }
@@ -71,6 +89,7 @@ body {
   margin: 0;
 }
 #app {
+  color: #fff;
   height: 100vh;
   background: #000;
   user-select: none;
