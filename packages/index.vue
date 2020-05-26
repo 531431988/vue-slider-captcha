@@ -1,32 +1,34 @@
 <template>
   <div class="vue-slider-captcha">
     <div class="vue-slider-captcha-panel">
-      <img ref="checkImg" :src="src" @load="checkimgLoaded" style="width:100%" alt />
-      <div
-        class="move-bar"
-        :class="{goFirst:isOk, goKeep:isKeep}"
-        :style="movebarStyle"
-        ref="moveBar"
-        v-show="showBar"
-      ></div>
-      <div class="clip-bar" :style="clipbarStyle" ref="clipBar"></div>
+      <img
+        v-if="data"
+        ref="checkImg"
+        :src="`data:image/png;base64,${data.bigImage}`"
+        style="width:100%"
+        alt
+      />
+      <div v-if="data" class="img-slider" ref="imgSlider">
+        <img
+          :src="`data:image/png;base64,${data.smallImage}`"
+          :style="`transform:translateY(${data.yHeight}px)`"
+        />
+      </div>
       <RefreshIcon class="refresh" v-if="!this.value" @click="$emit('on-refresh')" />
-      <div class="tips" v-if="!value && showErrorTip">{{failTip}}</div>
     </div>
     <div
       ref="control"
       class="vue-slider-captcha-control"
-      @mousemove="dragMoving"
-      @mouseup="dragFinish"
-      @mouseleave="dragFinish"
-      @touchmove="dragMoving"
-      @touchend="dragFinish"
+      @mousemove="onDragMoving"
+      @mouseup="onDragFinish"
+      @mouseleave="onDragFinish"
+      @touchmove="onDragMoving"
+      @touchend="onDragFinish"
     >
       <div
         class="vue-slider-captcha-progress-bar"
-        :class="{goFirst2: isOk}"
         ref="progressBar"
-        :style="progressBarStyle"
+        :style="`background: ${color}`"
       >{{value ? successText : ''}}</div>
       <div
         class="vue-slider-captcha-tip"
@@ -37,10 +39,9 @@
       <div
         ref="slider"
         class="vue-slider-captcha-slider"
-        :class="{goFirst:isOk}"
-        @mousedown="dragStart"
-        @touchstart="dragStart"
-        :style="sliderStyle"
+        @mousedown="onDragStart"
+        @touchstart="onDragStart"
+        style="left:0"
       >
         <svg viewBox="0 0 1024 1024" width="40" height="40" v-if="value">
           <path
@@ -60,16 +61,13 @@
 <script>
 import SliderIcon from './slider-icon'
 import RefreshIcon from './refresh-icon'
+
 export default {
   name: 'WMDragCaptcha',
   props: {
     value: {
       type: Boolean,
       default: false
-    },
-    width: {
-      type: Number,
-      default: 250
     },
     text: {
       type: String,
@@ -83,16 +81,12 @@ export default {
       type: String,
       default: '#76c61d'
     },
-    src: {
-      type: String
+    data: {
+      type: Object
     },
     failTip: {
       type: String,
       default: '拖动滑块将悬浮图像正确合并'
-    },
-    diff: {
-      type: Number,
-      default: 10
     }
   },
   model: {
@@ -105,135 +99,46 @@ export default {
     SliderIcon,
     RefreshIcon
   },
-  computed: {
-    sliderStyle () {
-      return {
-        left: '0px'
-      }
-    },
-    progressBarStyle () {
-      return {
-        background: this.color
-      }
-    }
-  },
   data () {
     return {
       isMoving: false,
-      x: 0,
-      isOk: false,
-      isKeep: false,
-      movebarStyle: {},
-      clipbarStyle: {},
-      showBar: false,
-      clipBarx: 0,
-      showErrorTip: false
+      x: 0
     }
   },
   methods: {
-    checkimgLoaded () {
-      // 生成图片缺失位置
-      var barWidth = 40
-      var imgHeight = this.$refs.checkImg.height
-      var halfWidth = Math.floor(this.width / 2)
-      var refreshHeigth = 25
-      var tipHeight = 20
-      var x = halfWidth + Math.ceil(Math.random() * (halfWidth - barWidth))
-      var y = refreshHeigth + Math.floor(Math.random() * (imgHeight - refreshHeigth - tipHeight))
-      this.clipbarStyle = {
-        width: barWidth + 'px',
-        top: y + 'px',
-        left: x + 'px'
-      }
-      this.clipBarx = x
-      var src = this.src
-      var width = this.width
-      this.movebarStyle = {
-        display: 'block',
-        background: `url(${src})`,
-        'background-position': `-${x}px -${y}px`,
-        'background-size': `${width}px`,
-        top: y + 'px',
-        left: '0px'
-      }
-    },
-    dragStart (e) {
+    onDragStart (e) {
       if (!this.value) {
         this.isMoving = true
-        var slider = this.$refs.slider
+        const { slider } = this.$refs
         this.x =
           (e.pageX || e.touches[0].pageX) -
           parseInt(slider.style.left.replace('px', ''), 10)
       }
-      this.showBar = true
-      this.showErrorTip = false
-      this.$emit('handlerMove')
     },
-    dragMoving (e) {
+    onDragMoving (e) {
       if (this.isMoving && !this.value) {
+        const { slider, imgSlider, progressBar } = this.$refs
         var _x = (e.pageX || e.touches[0].pageX) - this.x
-        var slider = this.$refs.slider
         slider.style.left = _x + 'px'
-        this.$refs.progressBar.style.width = _x + 'px'
-        this.$refs.moveBar.style.left = _x + 'px'
+        progressBar.style.width = _x + 'px'
+        imgSlider.style.left = _x + 'px'
       }
     },
-    dragFinish (e) {
+    onDragFinish (e) {
       if (this.isMoving && !this.value) {
-        var _x = (e.pageX || e.changedTouches[0].pageX) - this.x
-        if (Math.abs(_x - this.clipBarx) > this.diff) {
-          this.isOk = true
-          var that = this
-          setTimeout(function () {
-            that.$refs.slider.style.left = '0'
-            that.$refs.progressBar.style.width = '0'
-            that.$refs.moveBar.style.left = '0'
-            that.isOk = false
-          }, 500)
-          this.showErrorTip = true
-        } else {
-          this.passVerify()
-        }
+        var x = (e.pageX || e.changedTouches[0].pageX) - this.x
+        this.$emit('on-finish', x)
         this.isMoving = false
       }
     },
-    passVerify () {
-      this.$emit('update:value', true)
-      // this.$emit('change', true)
-      this.isMoving = false
-      this.isKeep = true
-      setTimeout(() => {
-        this.$refs.moveBar.style.left = this.clipBarx + 'px'
-        setTimeout(() => {
-          this.isKeep = false
-        }, 200)
-      }, 100)
-      this.$emit('passcallback')
-    },
-    reset () {
-      this.reImg()
-      this.checkimgLoaded()
-    },
-    reImg () {
-      this.$emit('update:value', false)
-      const oriData = this.$options.data()
-      for (const key in oriData) {
-        if (oriData.hasOwnProperty(key)) {
-          this.$set(this, key, oriData[key])
-        }
-      }
-      var slider = this.$refs.slider
+    onReset () {
+      // 将vlaue更新到父级
+      // this.$emit('update:value', false)
+      this.$emit('change', false)
+      const { slider, imgSlider, progressBar } = this.$refs
       slider.style.left = '0'
-      this.$refs.progressBar.style.width = '0'
-      this.$refs.moveBar.style.left = '0px'
-    }
-  },
-  watch: {
-    src: {
-      immediate: false,
-      slider: function () {
-        this.reImg()
-      }
+      imgSlider.style.left = '0'
+      progressBar.style.width = '0'
     }
   }
 }
@@ -241,22 +146,19 @@ export default {
 <style lang="less" scoped>
 @color: #666;
 .vue-slider-captcha {
-  width: 250px;
+  width: 400px;
   &-panel {
     position: relative;
     overflow: hidden;
-    .move-bar {
+    .img-slider {
+      position: absolute;
       z-index: 100;
-    }
-    .move-bar,
-    .clip-bar {
-      width: 40px;
-      height: 40px;
+      top: 0;
+      width: 55px;
+      height: 200px;
       position: absolute;
-    }
-    .clip-bar {
-      position: absolute;
-      background: rgba(255, 255, 255, 0.8);
+      background-repeat: no-repeat;
+      background-color: transparent;
     }
     .refresh {
       position: absolute;
@@ -292,7 +194,6 @@ export default {
   &-slider {
     position: absolute;
     top: 0px;
-    left: 0px;
     width: 40px;
     height: 40px;
     background-color: #fff;
@@ -329,18 +230,6 @@ export default {
     animation: slidetounlock 3s infinite;
   }
 }
-
-.goFirst {
-  left: 0px !important;
-  transition: left 0.5s;
-}
-.goKeep {
-  transition: left 0.2s;
-}
-.goFirst2 {
-  width: 0px !important;
-  transition: width 0.5s;
-}
 .vue-slider-captcha {
   position: relative;
   line-height: 0;
@@ -365,14 +254,6 @@ export default {
   z-index: 200;
 }
 @keyframes slidetounlock {
-  0% {
-    background-position: -250px 0;
-  }
-  100% {
-    background-position: 250px 0;
-  }
-}
-@keyframes slidetounlock2 {
   0% {
     background-position: -250px 0;
   }
