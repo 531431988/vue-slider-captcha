@@ -5,20 +5,12 @@ const resolve = dir => path.join(__dirname, dir)
 const assetsCDN = {
   externals: {
     vue: 'Vue',
-    'vue-router': 'VueRouter',
-    vuex: 'Vuex',
-    axios: 'axios',
-    xlsx: 'XLSX',
-    moment: 'moment'
+    axios: 'axios'
   },
   css: [],
   js: [
     '//unpkg.com/vue@2.6.10/dist/vue.min.js',
-    '//unpkg.com/vue-router@3.0.3/dist/vue-router.min.js',
-    '//unpkg.com/vuex@3.1.3/dist/vuex.min.js',
-    '//unpkg.com/axios@0.19.0/dist/axios.min.js',
-    '//unpkg.com/xlsx@0.15.6/dist/xlsx.min.js',
-    '//unpkg.com/moment@2.24.0/min/moment.min.js'
+    '//unpkg.com/axios@0.19.0/dist/axios.min.js'
   ]
 }
 module.exports = {
@@ -50,16 +42,17 @@ module.exports = {
     config.resolve.alias.set('@', resolve('demo'))
       .set('@ant-design/icons/lib/dist$', resolve('./icons.js'))
     if (env) {
-      config.plugin('html').tap(args => {
-        args[0].cdn = assetsCDN
-        return args
-      })
+      // config.plugin('html').tap(args => {
+      //   args[0].cdn = assetsCDN
+      //   return args
+      // })
     }
+    return config
   },
   configureWebpack: config => {
     config.resolve.extensions = ['.vue', '.js', '.jsx', '.json', '.less', '.css', '.scss', '.jpg', '.png', '.svg']
     if (env) {
-      config.externals = assetsCDN.externals
+      // config.externals = assetsCDN.externals
     }
   },
   css: {
